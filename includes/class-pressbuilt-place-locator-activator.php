@@ -30,7 +30,8 @@ class Pressbuilt_Place_Locator_Activator {
 	 * @since    1.0.0
 	 */
 	public static function activate() {
-
+		Pressbuilt_Place_Locator_Admin::custom_post_type_facility();
+		flush_rewrite_rules();
 	}
 
 }

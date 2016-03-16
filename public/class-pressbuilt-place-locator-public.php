@@ -96,18 +96,23 @@ class Pressbuilt_Place_Locator_Public {
 		 * class.
 		 */
 
-		wp_enqueue_script( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'js/pressbuilt-place-locator-public.js', array( 'jquery' ), $this->version, false );
+		wp_register_script( 'googlemaps', 'https://maps.googleapis.com/maps/api/js?libraries=places' );
+		wp_enqueue_script( 'googlemaps' );
+
+		wp_enqueue_script( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'js/pressbuilt-place-locator-public.js', array( 'jquery', 'googlemaps' ), $this->version, false );
+
+		wp_localize_script( $this->plugin_name, 'MyAjax', array( 'ajaxurl' => admin_url( 'admin-ajax.php')));
 
 	}
 
 	public function shortcode_locator_display( $atts ) {
 
 		
-		$facilities = $this->fetch_facilities();
+		$facilities = Pressbuilt_Place_Locator::fetch_facilities();
 
-		$insurance_plans = $this->fetch_insurance_plans();
+		$insurance_plans = Pressbuilt_Place_Locator::fetch_insurance_plans();
 
-		$services = $this->fetch_services();
+		$services = Pressbuilt_Place_Locator::fetch_services();
 
 		$counties = $this->fetch_counties();
 
@@ -116,84 +121,6 @@ class Pressbuilt_Place_Locator_Public {
 		require( dirname( __FILE__) . '/partials/shortcode-locator-display.php' );
 
 		return ob_get_clean();
-	}
-
-	public function fetch_facilities()
-	{
-
-		$context = stream_context_create(array(
-			'http' => array(
-				'header'  => "Authorization: Basic " . base64_encode("pressbuilt:pressbuilt")
-			)
-		));
-		$options = get_option( 'pressbuilt_display_locator_settings' );
-
-		$facilities = [];
-		if ( isset( $options['pressbuilt_display_locator_facility_list'] ) )
-		{
-			$facility_list_url = $options['pressbuilt_display_locator_facility_list'];
-			$facility_list_xml = file_get_contents( $facility_list_url, false, $context );
-			$facility_list_array = simplexml_load_string( $facility_list_xml ) or die( 'Error: Cannot create object' );
-			foreach ( $facility_list_array->Facility as $f )
-			{
-				if ( $f->Active == 'false' ) continue;
-				$facilities[ (int) $f->FacilityID ] = (array) $f;
-			}
-		}
-
-		return $facilities;
-	}
-
-	public function fetch_services()
-	{
-
-		$context = stream_context_create(array(
-			'http' => array(
-				'header'  => "Authorization: Basic " . base64_encode("pressbuilt:pressbuilt")
-			)
-		));
-		$options = get_option( 'pressbuilt_display_locator_settings' );
-
-		$services = [];
-		if ( isset( $options['pressbuilt_display_locator_service_list'] ) )
-		{
-			$service_list_url = $options['pressbuilt_display_locator_service_list'];
-			$service_list_xml = file_get_contents( $service_list_url, false, $context );
-			$service_list_array = simplexml_load_string( $service_list_xml ) or die( 'Error: Cannot create object' );
-			foreach ( $service_list_array->Service as $s )
-			{
-				if ( $s->Active == 'false' ) continue;
-				$services[ (int) $s->ServiceID ] = (string) $s->ServiceName;
-			}
-		}
-
-		return $services;
-	}
-
-	public function fetch_insurance_plans()
-	{
-
-		$context = stream_context_create(array(
-			'http' => array(
-				'header'  => "Authorization: Basic " . base64_encode("pressbuilt:pressbuilt")
-			)
-		));
-		$options = get_option( 'pressbuilt_display_locator_settings' );
-
-		$insurance_plans = [];
-		if ( isset( $options['pressbuilt_display_locator_insurance_list'] ) )
-		{
-			$insurance_plan_list_url = $options['pressbuilt_display_locator_insurance_list'];
-			$insurance_plan_list_xml = file_get_contents( $insurance_plan_list_url, false, $context );
-			$insurance_plan_list_array = simplexml_load_string( $insurance_plan_list_xml ) or die( 'Error: Cannot create object' );
-			foreach ( $insurance_plan_list_array->Insurance as $i )
-			{
-				if ( $i->Active == 'false' ) continue;
-				$insurance_plans[ (int) $i->InsID ] = (string) $i->InsName;
-			}
-		}
-
-		return $insurance_plans;
 	}
 
 	public function fetch_counties()
@@ -290,6 +217,33 @@ class Pressbuilt_Place_Locator_Public {
 			'VA-VA' => 'VA-VA',
 			'VA-Virginia' => 'VA-Virginia',
 		];
+	}
+
+	public function update_latlng() {
+		$postId = $_POST['postId'];
+		$latitude = $_POST['latitude'];
+		$longitude = $_POST['longitude'];
+
+		if ( isset($postId) && isset($latitude) && isset($longitude) ) {
+			$post = get_post( $postId );
+
+			if ( $post ) {
+				update_post_meta( $postId, 'pressbuilt_place_locator_latitude', $latitude );
+				update_post_meta( $postId, 'pressbuilt_place_locator_longitude', $longitude );
+
+				return 'success';
+			} else {
+				return 'no post';
+			}
+		} else {
+			return 'no data';
+		}
+	}
+
+	public function myStartSession() {
+		if(!session_id()) {
+			session_start();
+		}
 	}
 
 }

@@ -1,8 +1,9 @@
 
-    <div id="panel"></div>
     <div id="map-canvas"></div>
 
 <?php
+/*
+    echo '<div id="map-canvas"></div>';
 
 	echo '<select name="county">';
 	echo '<option value="">Select a County</option>';
@@ -27,5 +28,5 @@
 		echo '<option value="' . $insurance_plan_id . '">' . $insurance_plan_name . '</option>';
 	}
 	echo '</select><br>';
-	
+*/
 ?>

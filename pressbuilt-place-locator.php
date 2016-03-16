@@ -16,7 +16,7 @@
  * Plugin Name:       Pressbuilt Place Locator
  * Plugin URI:        https://pressbuilt.com
  * Description:       Displays locations on a Google Map based on specified criteria
- * Version:           1.0.0
+ * Version:           1.0.1
  * Author:            Pressbuilt
  * Author URI:        https://pressbuilt.com
  * Text Domain:       pressbuilt-place-locator
